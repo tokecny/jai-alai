@@ -1,0 +1,13 @@
+:root {
+  --this-width : 0;
+  --this-height : 0;
+  --this-sum : 0;
+  --vh: 0;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  border: box-sizing;
+}
+

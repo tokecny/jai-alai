@@ -1,0 +1,61 @@
+#CJSInstructionHeader {
+    height: 14.22vh;
+    height: calc(var(--vh, 1vh) * 14.22);
+}
+
+#CJSInstructionBody {
+    height: 85.78vh;
+    height: calc(var(--vh, 1vh) * 85.78);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.CJSInstructionBodyProgressBar {
+    // height: 10%;
+}
+
+.CJSInstructionWindow {
+    // height: 60%;
+    display: flex;
+    align-items: center;
+}
+
+.CJSInstructionEnterButton {
+    // height: 20%;
+}
+
+.canvasContainerInstruction {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: absolute;
+    height: fit-content;
+    padding: calc(var(--this-sum) / 102.83);
+    left: 0;
+    bottom: calc(var(--this-sum) / 4.78);
+    background-color: #FFFFFF;
+    border-radius: calc(var(--this-sum) / 154.25);
+}
+
+.btnContainerInstruction {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    flex-direction: row;
+    position: absolute;
+    width: fit-content;
+    height: fit-content;
+    min-width: calc(var(--this-sum) / 3.55);
+    padding: 
+        calc(var(--this-sum) / 77.125)
+        calc(var(--this-sum) / 102.83)
+        calc(var(--this-sum) / 77.125)
+        calc(var(--this-sum) / 102.83);
+    left: 0;
+    bottom: calc(var(--this-sum) / 3.63);
+    background-color: #FFFFFF;
+    border-radius: calc(var(--this-sum) / 154.25);
+}

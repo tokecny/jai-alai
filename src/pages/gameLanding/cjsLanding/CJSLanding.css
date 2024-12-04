@@ -1,0 +1,27 @@
+/* #CJSLandingHeader {
+    height: 14.22vh;
+    height: calc(var(--vh, 1vh) * 14.22);
+} */
+
+#CJSLandingBody {
+    height: 60vh;
+    height: calc(var(--vh, 1vh) * 60);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* .CJSLandingProgressBar {
+    height: 10%;
+}
+
+.CJSLandingWindow {
+    height: 60%;
+    display: flex;
+    align-items: center;
+}
+
+.CJSLandingEnterButton {
+    height: 20%;
+} */
