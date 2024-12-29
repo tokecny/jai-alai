@@ -181,7 +181,7 @@ function FITC2(props): any {
         Shuffle(baselineSetsizeAndTarget); 
         // ใส่ baselineSetsizeAndTarget เข้าไปใน allSetsSizeAndTarget
         allSetsizeAndTarget = [...baselineSetsizeAndTarget];
-        
+
         // conjunction search 5 mini-blocks 
         // ก่อนจะใส่ testSetsizeAndTarget เช็คให้ชัวร์ก่อนว่า allSetsizeAndTarget ไม่ว่างเปล่า
         if (allSetsizeAndTarget.length === baselineSetsizeAndTarget.length) {
@@ -482,20 +482,20 @@ function FITC2(props): any {
     }
     
     function checkResp(foo) {
-        clickSound();
+        // clickSound();
         let dT2 = new Date();
         ET = dT2.getTime();
         allClickTime.push(thisTime());
         let rt = ET - STT;
         allRt.push(rt);
         if (change === foo) {
-            combo2Sound();
+            // combo2Sound();
             thatRight = 'right';
             checkAns.push(thatRight);
             hitRt.push(rt);
             correctCount++;
         } else {
-            losingSound();
+            // losingSound();
             thatRight = 'wrong';
             checkAns.push(thatRight);
             incorrectCount++;
