@@ -132,20 +132,28 @@ function FITC2(props): any {
 
     function checkStimuliColorSet(){
         const colorSet = props.userId % 4; 
-        if (props.userId % 2 === 0){ // ถ้า userId เป็นเลขคู่
-            if (allSetsizeAndTarget[currTrial][3] ===  0) {
-                setSearchTarget({ shape: 0, col: colorSet });
-            } else {
-                setSearchTarget({ shape: 1, col: (colorSet + 1) % 4 });
-            }
-            
-        } else { // ถ้า userId เป็นเลขคี่
-            if (allSetsizeAndTarget[currTrial][3] ===  1) {
-                setSearchTarget({ shape: 1, col: (colorSet + 1) % 4 });
-            } else {
-                setSearchTarget({ shape: 0, col: colorSet });
-            }
+
+        // เอาส่วนนี้ออกหลังจากเก็บไปแล้วครบ 16 คน
+        if (allSetsizeAndTarget[currTrial][3] === 0) {
+            setSearchTarget( { shape: 1, col: colorSet });
+        } else {
+            setSearchTarget( { shape: 0, col: (colorSet + 1) % 4 });
         }
+
+        // อันที่ถูกต้อง ค่อยมาเปิดใช้งานหลังจากเก็บครบ 16 คน
+        // if (props.userId % 2 === 0){ // ถ้า userId เป็นเลขคู่
+        //     if (allSetsizeAndTarget[currTrial][3] ===  0) {
+        //         setSearchTarget({ shape: 0, col: colorSet });
+        //     } else {
+        //         setSearchTarget({ shape: 1, col: (colorSet + 1) % 4 });
+        //     }  
+        // } else { // ถ้า userId เป็นเลขคี่
+        //     if (allSetsizeAndTarget[currTrial][3] ===  0) {
+        //         setSearchTarget({ shape: 1, col: colorSet });
+        //     } else {
+        //         setSearchTarget({ shape: 0, col: (colorSet + 1) % 4 });
+        //     }
+        // }
     }
 
     function createPseudorandomStimuli() {
@@ -171,10 +179,9 @@ function FITC2(props): any {
             }
         }
         Shuffle(baselineSetsizeAndTarget); 
-
         // ใส่ baselineSetsizeAndTarget เข้าไปใน allSetsSizeAndTarget
         allSetsizeAndTarget = [...baselineSetsizeAndTarget];
-
+        
         // conjunction search 5 mini-blocks 
         // ก่อนจะใส่ testSetsizeAndTarget เช็คให้ชัวร์ก่อนว่า allSetsizeAndTarget ไม่ว่างเปล่า
         if (allSetsizeAndTarget.length === baselineSetsizeAndTarget.length) {
@@ -233,7 +240,6 @@ function FITC2(props): any {
         // กำหนดค่า trialNumber ให้เท่ากับจำนวนข้อทั้งหมด
         trialNumber = allSetsizeAndTarget.length;
         checkStimuliColorSet();
-        console.log(allSetsizeAndTarget)
     }
 
     function switchSearchMode() {
