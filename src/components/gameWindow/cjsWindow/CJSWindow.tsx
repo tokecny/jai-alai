@@ -5,7 +5,7 @@ function CJSWindow(props) {
       <div className="absolute top-1/2 left-[13%] transform -translate-y-1/2 -translate-x-1/2 text-center">
         <p className="text-gray-700 font-bold text-xl">
           ไม่มี<br />
-          <span className="text-b">(กด Shift ซ้าย)</span>
+          <span className="text-b">(กดปุ่ม Z)</span>
         </p>
       </div>
 
@@ -54,7 +54,7 @@ function CJSWindow(props) {
       <div className="absolute top-1/2 right-[13%] transform -translate-y-1/2 translate-x-1/2 text-center">
         <p className="text-gray-700 font-bold text-xl">
           มี<br />
-          <span className="text-b">(กด Shift ขวา)</span>
+          <span className="text-b">(กดปุ่ม / )</span>
         </p>
       </div>
     </div>

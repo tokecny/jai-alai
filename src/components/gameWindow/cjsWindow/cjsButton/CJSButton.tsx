@@ -5,21 +5,21 @@ function CJSButton(props) {
   useEffect(() => {
     // ฟังก์ชันตรวจจับการกดแป้นพิมพ์
     function handleKeyDown(event) {
-      // ตรวจสอบว่าเป็นปุ่ม Shift ซ้ายหรือขวา และตรวจสอบว่า disabledButton เป็น false
+      // ตรวจสอบว่า disabledButton เป็น false
       if (!props.disabledButton) {
-        if (event.code === 'ShiftLeft') {
-          // กด Shift ซ้าย -> ทำงานเหมือนคลิกปุ่ม "ไม่มี"
-          props.checkResp(0);  // เมื่อกด Shift ซ้าย
-        } else if (event.code === 'ShiftRight') {
-          // กด Shift ขวา -> ทำงานเหมือนคลิกปุ่ม "มี"
-          props.checkResp(1);  // เมื่อกด Shift ขวา
+        if (event.code === 'KeyZ') {
+          // กดตัว z -> ทำงานเหมือนคลิกปุ่ม "ไม่มี"
+          props.checkResp(0); // เมื่อกดตัว z
+        } else if (event.code === 'Slash') {
+          // กดตัว / -> ทำงานเหมือนคลิกปุ่ม "มี"
+          props.checkResp(1); // เมื่อกดตัว /
         }
       }
     }
-
+    
     // เพิ่ม event listener สำหรับการกดแป้นพิมพ์
     document.addEventListener('keydown', handleKeyDown);
-
+    
     // ทำความสะอาดเมื่อคอมโพเนนต์ถูกทำลาย
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
