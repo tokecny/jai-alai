@@ -8,7 +8,7 @@ import React from 'react';
 
 const gameInfos = [
   {
-    name: 'Frequency-Adjusted Search Task',
+    name: 'Search-in-the-Crowd',
     title: 'FAST',
     domain: 'Visual Search',
     gameUri: 'frequency-adjusted-search-task',
