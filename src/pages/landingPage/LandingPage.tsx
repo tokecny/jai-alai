@@ -7,25 +7,11 @@ import { useEffect } from 'react';
 import React from 'react';
 
 const gameInfos = [
-  // {
-  //   name: 'Face In The Crowd A',
-  //   title: 'หาเธอในฝูงชน A',
-  //   domain: 'Track A',
-  //   gameUri: 'face-in-the-crowd-A',
-  //   image: `${CJSImage}`,
-  // },
-  // {
-  //   name: 'Face In The Crowd B',
-  //   title: 'หาเธอในฝูงชน B',
-  //   domain: 'Track B',
-  //   gameUri: 'face-in-the-crowd-B',
-  //   image: `${CJSImage}`,
-  // },
   {
-    name: 'Face In The Crowd 2.0',
-    title: 'หาเธอในฝูงชน',
+    name: 'Frequency-Adjusted Search Task',
+    title: 'FAST',
     domain: 'Visual Search',
-    gameUri: 'face-in-the-crowd-2.0',
+    gameUri: 'frequency-adjusted-search-task',
     image: `${CJSImage}`,
   },
 ]

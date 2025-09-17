@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/jai-alai/static/css/main.6896276d.css",
-    "main.js": "/jai-alai/static/js/main.eb509264.js",
+    "main.js": "/jai-alai/static/js/main.8352b130.js",
     "static/js/885.987b75e8.chunk.js": "/jai-alai/static/js/885.987b75e8.chunk.js",
     "static/js/453.fb14e992.chunk.js": "/jai-alai/static/js/453.fb14e992.chunk.js",
     "static/media/combo2.mp3": "/jai-alai/static/media/combo2.dc4a26f58622d3a5a4c0.mp3",
@@ -10,12 +10,12 @@
     "static/media/losingStreak.mp3": "/jai-alai/static/media/losingStreak.3e9f53afed48af7cc022.mp3",
     "index.html": "/jai-alai/index.html",
     "main.6896276d.css.map": "/jai-alai/static/css/main.6896276d.css.map",
-    "main.eb509264.js.map": "/jai-alai/static/js/main.eb509264.js.map",
+    "main.8352b130.js.map": "/jai-alai/static/js/main.8352b130.js.map",
     "885.987b75e8.chunk.js.map": "/jai-alai/static/js/885.987b75e8.chunk.js.map",
     "453.fb14e992.chunk.js.map": "/jai-alai/static/js/453.fb14e992.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.6896276d.css",
-    "static/js/main.eb509264.js"
+    "static/js/main.8352b130.js"
   ]
 }

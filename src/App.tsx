@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import LandingPage from './pages/landingPage/LandingPage';
-import FITC2 from './pages/game/FITC2';
+import FAST from './pages/game/FAST';
 import LoadingSpinner from './components/loadingSpinner/LoadingSpinner';
 import ParticipantForm from './pages/participantForm/participantForm';
 import { getDataFromLocalStorage } from './uitls/offline';
@@ -71,7 +71,7 @@ function App() {
         <Route path="/landing" element={<LandingPage />} />
         {/* <Route path="/face-in-the-crowd-A" element={<CJSGame userId={userId}/>} />
         <Route path="/face-in-the-crowd-B" element={<CJSGame userId={userId}/>} /> */}
-        <Route path="/face-in-the-crowd-2.0" element={<FITC2 userId={userId}/>} />
+        <Route path="/frequency-adjusted-search-task" element={<FAST userId={userId}/>} />
         {/* <Route path="/face-in-the-crowd/instruction" element={<CJSInstruction />} /> */}
         {/* <Route path="/face-in-the-crowd/trial" element={<CJSGame userId={userId} />} /> */}
       </Routes>

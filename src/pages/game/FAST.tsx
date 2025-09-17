@@ -16,19 +16,36 @@ let canvasContext: CanvasRenderingContext2D;
 let trialNumber;
 let currTrial = 0;
 let backgroundColor = '#E5E5E5';
-let stimulusColor = ['#9370DB', '#3CB4C6', '#B2D33D', '#F67E4B']; 
+let stimulusColor = [
+  '#c96c6c', // แดงตุ่น (0°)
+  '#c9a46c', // ส้มตุ่น (45°)
+  '#b5c96c', // เขียวมะนาวตุ่น (90°)
+  '#8fc96c', // เขียวอ่อนตุ่น (135°)
+  '#6cc9c9', // ฟ้าน้ำทะเลตุ่น (180°)
+  '#6c8fc9', // น้ำเงินหม่น (225°)
+  '#8f6cc9', // ม่วงตุ่น (270°)
+  '#c96ca4'  // ชมพูตุ่น (315°)
+];
 let searchTargetList: any[][] = [
     [
-        {description: 'สี่เหลี่ยมสีม่วง', color: '#9370DB', shape: 'square'},
-        {description: 'สี่เหลี่ยมสีฟ้า', color: '#3CB4C6', shape: 'square'},
-        {description: 'สี่เหลี่ยมสีเขียว', color: '#B2D33D', shape: 'square'},
-        {description: 'สี่เหลี่ยมสีส้ม', color: '#F67E4B', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีแดง', color: '#c96c6c', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีน้ำตาล', color: '#c9a46c', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีเขียวมะนาว', color: '#b5c96c', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีเขียว', color: '#8fc96c', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีฟ้า', color: '#6cc9c9', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีน้ำเงิน', color: '#6c8fc9', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีม่วง', color: '#8f6cc9', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีชมพู', color: '#c96ca4', shape: 'square'},
     ],
     [
-        {description: 'วงกลมสีม่วง', color: '#9370DB', shape: 'circle'},
-        {description: 'วงกลมสีฟ้า', color: '#3CB4C6', shape: 'circle'},
-        {description: 'วงกลมสีเขียว', color: '#B2D33D', shape: 'circle'},
-        {description: 'วงกลมสีส้ม', color: '#F67E4B', shape: 'circle'}
+        {description: 'วงกลมสีแดง', color: '#c96c6c', shape: 'circle'},
+        {description: 'วงกลมสีน้ำตาล', color: '#c9a46c', shape: 'circle'},
+        {description: 'วงกลมสีเขียวมะนาว', color: '#b5c96c', shape: 'circle'},
+        {description: 'วงกลมสีเขียว', color: '#8fc96c', shape: 'circle'},
+        {description: 'วงกลมสีฟ้า', color: '#6cc9c9', shape: 'circle'},
+        {description: 'วงกลมสีน้ำเงิน', color: '#6c8fc9', shape: 'circle'},
+        {description: 'วงกลมสีม่วง', color: '#8f6cc9', shape: 'circle'},
+        {description: 'วงกลมสีชมพู', color: '#c96ca4', shape: 'circle'},
     ],
     
 ]
@@ -87,10 +104,10 @@ let stimulusDataResult: any[] = [];
 let targetDataResult: any[] = [];
 let setSizeRecord: any[] = [];
 let allSearchMode: string[] = [];
-let version = 'FITC2';
+let version = 'FAST';
 let postEntryResult;
 
-function FITC2(props): any {
+function FAST(props): any {
     const navigate = useNavigate();
     const [clickSound] = useSound(clickSoundSrc);
     const [combo2Sound] = useSound(combo2SoundSrc);
@@ -133,27 +150,20 @@ function FITC2(props): any {
     function checkStimuliColorSet(){
         const colorSet = props.userId % 4; 
 
-        // เอาส่วนนี้ออกหลังจากเก็บไปแล้วครบ 16 คน
-        if (allSetsizeAndTarget[currTrial][3] === 0) {
-            setSearchTarget( { shape: 1, col: colorSet });
-        } else {
-            setSearchTarget( { shape: 0, col: (colorSet + 1) % 4 });
-        }
-
         // อันที่ถูกต้อง ค่อยมาเปิดใช้งานหลังจากเก็บครบ 16 คน
-        // if (props.userId % 2 === 0){ // ถ้า userId เป็นเลขคู่
-        //     if (allSetsizeAndTarget[currTrial][3] ===  0) {
-        //         setSearchTarget({ shape: 0, col: colorSet });
-        //     } else {
-        //         setSearchTarget({ shape: 1, col: (colorSet + 1) % 4 });
-        //     }  
-        // } else { // ถ้า userId เป็นเลขคี่
-        //     if (allSetsizeAndTarget[currTrial][3] ===  0) {
-        //         setSearchTarget({ shape: 1, col: colorSet });
-        //     } else {
-        //         setSearchTarget({ shape: 0, col: (colorSet + 1) % 4 });
-        //     }
-        // }
+        if (props.userId % 2 === 0){ // ถ้า userId เป็นเลขคู่
+            if (allSetsizeAndTarget[currTrial][3] ===  0) {
+                setSearchTarget({ shape: 0, col: colorSet });
+            } else {
+                setSearchTarget({ shape: 1, col: (colorSet + 1) % 4 });
+            }  
+        } else { // ถ้า userId เป็นเลขคี่
+            if (allSetsizeAndTarget[currTrial][3] ===  0) {
+                setSearchTarget({ shape: 1, col: colorSet });
+            } else {
+                setSearchTarget({ shape: 0, col: (colorSet + 1) % 4 });
+            }
+        }
     }
 
     function createPseudorandomStimuli() {
@@ -666,7 +676,7 @@ function FITC2(props): any {
     )
 }
 
-export default FITC2;
+export default FAST;
 
 function thisTime() {
     let thisTime = moment().format('YYYY-MM-DDTkk:mm:ss.SSSSSS');
