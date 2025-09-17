@@ -17,35 +17,29 @@ let trialNumber;
 let currTrial = 0;
 let backgroundColor = '#E5E5E5';
 let stimulusColor = [
-  '#c96c6c', // แดงตุ่น (0°)
-  '#c9a46c', // ส้มตุ่น (45°)
-  '#b5c96c', // เขียวมะนาวตุ่น (90°)
-  '#8fc96c', // เขียวอ่อนตุ่น (135°)
-  '#6cc9c9', // ฟ้าน้ำทะเลตุ่น (180°)
-  '#6c8fc9', // น้ำเงินหม่น (225°)
-  '#8f6cc9', // ม่วงตุ่น (270°)
-  '#c96ca4'  // ชมพูตุ่น (315°)
+  '#BC4E4E', // แดง (0°)
+  '#A6A63F', // เขียวมะกอก (ุ60°)
+  '#72CA72', // เขียว (120°)
+  '#59C0C0', // ฟ้า (180°)
+  '#5959C0', // น้ำเงินอมม่วง (240°)
+  '#B946B9', // ม่วงชมพู (300°)
 ];
 let searchTargetList: any[][] = [
     [
-        {description: 'สี่เหลี่ยมสีแดง', color: '#c96c6c', shape: 'square'},
-        {description: 'สี่เหลี่ยมสีน้ำตาล', color: '#c9a46c', shape: 'square'},
-        {description: 'สี่เหลี่ยมสีเขียวมะนาว', color: '#b5c96c', shape: 'square'},
-        {description: 'สี่เหลี่ยมสีเขียว', color: '#8fc96c', shape: 'square'},
-        {description: 'สี่เหลี่ยมสีฟ้า', color: '#6cc9c9', shape: 'square'},
-        {description: 'สี่เหลี่ยมสีน้ำเงิน', color: '#6c8fc9', shape: 'square'},
-        {description: 'สี่เหลี่ยมสีม่วง', color: '#8f6cc9', shape: 'square'},
-        {description: 'สี่เหลี่ยมสีชมพู', color: '#c96ca4', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีแดง', color: '#BC4E4E', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีเขียวมะกอก', color: '#A6A63F', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีเขียว', color: '#72CA72', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีฟ้า', color: '#59C0C0', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีน้ำเงินอมม่วง', color: '#5959C0', shape: 'square'},
+        {description: 'สี่เหลี่ยมสีม่วงชมพู', color: '#B946B9', shape: 'square'},
     ],
     [
-        {description: 'วงกลมสีแดง', color: '#c96c6c', shape: 'circle'},
-        {description: 'วงกลมสีน้ำตาล', color: '#c9a46c', shape: 'circle'},
-        {description: 'วงกลมสีเขียวมะนาว', color: '#b5c96c', shape: 'circle'},
-        {description: 'วงกลมสีเขียว', color: '#8fc96c', shape: 'circle'},
-        {description: 'วงกลมสีฟ้า', color: '#6cc9c9', shape: 'circle'},
-        {description: 'วงกลมสีน้ำเงิน', color: '#6c8fc9', shape: 'circle'},
-        {description: 'วงกลมสีม่วง', color: '#8f6cc9', shape: 'circle'},
-        {description: 'วงกลมสีชมพู', color: '#c96ca4', shape: 'circle'},
+        {description: 'วงกลมสีแดง', color: '#BC4E4E', shape: 'circle'},
+        {description: 'วงกลมสีเขียวมะกอก', color: '#A6A63F', shape: 'circle'},
+        {description: 'วงกลมสีเขียว', color: '#72CA72', shape: 'circle'},
+        {description: 'วงกลมสีฟ้า', color: '#59C0C0', shape: 'circle'},
+        {description: 'วงกลมสีน้ำเงินอมม่วง', color: '#5959C0', shape: 'circle'},
+        {description: 'วงกลมสีม่วงชมพู', color: '#B946B9', shape: 'circle'},
     ],
     
 ]
