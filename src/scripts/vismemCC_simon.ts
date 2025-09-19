@@ -48,25 +48,31 @@ export function drawText(ctx, text) {
     ctx.fillText(text.words, text.x, text.y);
 }
 
-export function makeCircle(id, x, y, radius,
-    canMove = false, lineWidth = 2,
-    color = '#FFFFFF', lineCol = '#D4D4D4',
-    arc1 = 0, arc2 = Math.PI * 2) {
-    var circle = {
-        id: id,
-        x: x,
-        y: y,
-        radius: radius,
-        color: color,
-        lineCol: lineCol,
-        lineWidth: lineWidth,
-        arc1: arc1,
-        arc2: arc2,
-        canMove: canMove,
-        type: 'circle'
-    }
-    objects.push(circle)
-    return circle;
+export function makeCircle(
+  id: string, x: number, y: number, radius: number,
+  canMove: boolean = false,
+  lineWidth: number | string = 2,     // รับได้ทั้ง number หรือ string (legacy)
+  color: string = '#FFFFFF',
+  lineCol: string = '#D4D4D4',
+  arc1: number = 0, arc2: number = Math.PI * 2
+) {
+  // --- Normalize legacy signature: (canMove, color, lineCol)
+  if (typeof lineWidth === 'string') {
+    lineCol = color ?? '#D4D4D4';
+    color = lineWidth;
+    lineWidth = 2;
+  }
+
+  const circle = {
+    id, x, y, radius,
+    color, lineCol,
+    lineWidth: lineWidth as number,
+    arc1, arc2,
+    canMove,
+    type: 'circle'
+  };
+  objects.push(circle);
+  return circle;
 }
 
 export function drawCircle(ctx, circle) {
@@ -301,7 +307,8 @@ export function drawGrid(ctx, numCol, numRow) {
 export function erase(ctx) {
     var width = ctx.canvas.width;
     var height = ctx.canvas.height;
-    ctx.fillStyle = '#FFFFFF';
+    // ctx.fillStyle = '#FFFFFF'; // Original one
+    ctx.fillStyle = '#BCBCBC';
     ctx.fillRect(0, 0, width, height);
 }
 
