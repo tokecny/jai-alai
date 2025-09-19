@@ -63,8 +63,8 @@ export default function ParticipantForm(props: {
                                     setPromptUserId(""); // เคลียร์ input
                                 } else {
                                     // ตรวจสอบว่าหมายเลขอยู่ในช่วงที่อนุญาต (001 ถึง 016) หรือหมายเลข 428
-                                    if ((numValue < 1 || numValue > 16) && numValue !== 428) {
-                                        alert("กรุณากรอกหมายเลขในช่วง 001 ถึง 016");
+                                    if ((numValue < 1 || numValue > 48) && numValue !== 428) {
+                                        alert("กรุณากรอกหมายเลขในช่วง 001 ถึง 048");
                                         setPromptUserId(""); // เคลียร์ input
                                     } else {
                                         props.setUserId(numValue); // ตั้งค่าผู้ใช้
