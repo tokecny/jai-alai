@@ -11,7 +11,7 @@ const gameInfos = [
     name: 'Search-in-the-Crowd',
     title: 'FAST',
     domain: 'Visual Search',
-    gameUri: 'frequency-adjusted-search-task',
+    gameUri: 'search-in-the-crowd',
     image: `${CJSImage}`,
   },
 ]

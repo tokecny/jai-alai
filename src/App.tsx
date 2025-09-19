@@ -69,11 +69,10 @@ function App() {
       <Routes>
         <Route path="/" element={<ParticipantForm setUserId={setUserId} />} />
         <Route path="/landing" element={<LandingPage />} />
-        {/* <Route path="/face-in-the-crowd-A" element={<CJSGame userId={userId}/>} />
-        <Route path="/face-in-the-crowd-B" element={<CJSGame userId={userId}/>} /> */}
-        <Route path="/frequency-adjusted-search-task" element={<FAST userId={userId}/>} />
-        {/* <Route path="/face-in-the-crowd/instruction" element={<CJSInstruction />} /> */}
-        {/* <Route path="/face-in-the-crowd/trial" element={<CJSGame userId={userId} />} /> */}
+        <Route
+          path="/search-in-the-crowd"
+          element={<FAST userId={(userId ?? 0)} />}
+        />
       </Routes>
       <LoadingSpinner />
     </Router>
