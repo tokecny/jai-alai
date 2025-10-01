@@ -10,9 +10,9 @@ function CJSWindow(props) {
       </div>
 
       {/* ข้อความ searchInstruction อยู่เหนือกล่อง canvas */}
-      <div className="absolute top-[1%] left-1/2 transform -translate-x-1/2 text-center">
+      <div className="absolute top-[1%] left-1/2 transform -translate-x-1/2 text-center bg-[#BCBCBC]">
       {props.searchTarget ? (
-        <div className="searchInstruction text-center flex items-center">
+        <div className="searchInstruction text-center flex items-center text-gray-700">
           มี
           {/* รูปวงกลม/สี่เหลี่ยมอยู่ตรงกลางกับคำว่า "มี" */}
           <span
@@ -36,9 +36,9 @@ function CJSWindow(props) {
           หรือไม่?
         </div>
       ) : (
-        'ไม่มี'
+        '' // ทำให้ไม่มี text อะไรขึ้น
       )}
-    </div>
+      </div>
 
       {/* กล่อง canvas */}
       <div className="relative flex justify-center items-center">
@@ -46,7 +46,7 @@ function CJSWindow(props) {
           id="myCanvas"
           width={props.canvasWidth}
           height={props.canvasHeight}
-          className="border border-gray-300 shadow-lg"
+          className="border border-[#BCBCBC] shadow-[0_0_12px_0_rgba(0,0,0,0.15)] rounded-md"
         ></canvas>
       </div>
 
