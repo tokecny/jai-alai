@@ -85,12 +85,12 @@ const SET_SIZE = 31;
 
 // 6 hues (60° apart), muted
 const COLORS: string[] = [
-  '#C15B5B', // 0 red (muted)
-  '#7E7E30', // 1 olive
-  '#358B35', // 2 green (soft)
-  '#338686', // 3 teal/cyan
-  '#7171C9', // 4 indigo/slate-blue
-  '#BC4DBC', // 5 magenta/orchid
+  '#A83F3F', // red (muted)
+  '#656527', // olive
+  '#2B702B', // green (soft)
+  '#296C6C', // teal/cyan
+  '#5555BF', // indigo/slate-blue
+  '#9A3A9A'  // magenta/orchid
 ];
 
 // Complementary pairs (180° apart)
