@@ -17,30 +17,51 @@ import clickSoundSrc from '../../assets/sound/click.mp3';
 import combo2SoundSrc from '../../assets/sound/combo2.mp3';
 import losingSoundSrc from '../../assets/sound/losingStreak.mp3';
 import moment from 'moment';
+import { computeColorMetrics } from '../../scripts/colorMetrics';
 import { Shuffle } from '../../scripts/shuffle';
 import * as vismem from '../../scripts/vismemCC_simon';
 import { saveJSONDataToClientDevice } from '../../uitls/offline';
 
-// ===============================
-// Types
-// ===============================
-type ShapeId = 0 | 1;      // 0 = square, 1 = circle
-type ColorIdx = 0 | 1 | 2 | 3 | 4 | 5;
-type PairIdx  = 0 | 1 | 2;
+// ==== Types (Lean schema) ====
+type Phase = 'baseline' | 'testing';
 type Role = 'ex' | 'new' | 'neutral';
 
+// รูปทรง: 0=square, 1=circle
+type ShapeId = 0 | 1;
+
+// index สี 0..5 ตาม COLORS
+type ColorIdx = 0 | 1 | 2 | 3 | 4 | 5;
+
+// คู่สี 0..2 ตาม COLOR_PAIRS
+type PairIdx = 0 | 1 | 2;
+
 type TrialRow = {
-  setSize: number;          // distractors count (target จะถูกเติมทีหลังเมื่อ present)
-  hasTarget: 0 | 1;         // 1=present, 0=absent
-  role: Role | 'baseline';  // baseline | ex | new | neutral
-  pairIdx: PairIdx;         // คู่สีที่ใช้ (baseline ก็เก็บ pair ของบทบาทไว้)
-  block: number;            // 0 = baseline, 1..10 = testing blocks
+  setSize: number;               // จำนวน distractors (เราจะวาด setSize + 1 ตำแหน่ง)
+  hasTarget: 0 | 1;
+  role: 'baseline' | Role;       // baseline จะไม่ใช่ role ตรงๆ
+  pairIdx: PairIdx;
+  block: number;                 // 0=baseline, 1..10=testing
 };
 
-interface SearchTarget {
-  shape: ShapeId;
-  col: ColorIdx;
-}
+type TrialLog = {
+  index: number;
+  phase: Phase;                 // "baseline" | "testing"
+  block: number;                // 0=baseline, 1..10=testing
+  role: Role;                   // "ex" | "new" | "neutral"
+  hasTarget: boolean;
+  respHasTarget: boolean;
+  respCorrect: boolean;
+  rtMs: number;                 // เก็บทุก trial (ถูก/ผิด)
+  startTime: string;            // ISO
+  answerTime: string;           // ISO
+  targetShape: 'square' | 'circle';
+  targetColorHex: string | null;
+  targetXY: { x: number, y: number } | null;
+  distractors: { sameShape_otherColor: number; otherShape_sameColor: number };
+};
+
+// ==== Log container ====
+let TRIAL_LOG: TrialLog[] = [];
 
 // ===============================
 // Visual & Task Constants
@@ -58,6 +79,9 @@ const OBJ_SIZE = 45;
 const RADIUS = OBJ_SIZE / 2;
 const JITTER = 8;
 const BG_COLOR = '#BCBCBC';
+
+// จำนวน distractors ต่อ trial (เราจะสุ่มตำแหน่ง setSize + 1 เพื่อกันที่ให้ target)
+const SET_SIZE = 31;
 
 // 6 hues (60° apart), muted
 const COLORS: string[] = [
@@ -85,7 +109,33 @@ const PAIR_LABEL: Record<number, string> = {
 // Probabilities (testing)
 const PROB_HILO  = [0.9, 0.7, 0.5, 0.3, 0.1];       // High → Low
 const PROB_LOHI  = [...PROB_HILO].reverse();        // Low → High
-const PROB_CONST = [0.5, 0.5, 0.5, 0.5, 0.5];       // Constant
+
+// ==== Prob schedule (เพื่อใส่ใน payload.design.probSchedule) ====
+const PROB_SCHEDULE: Record<number, { ex: number; new: number; neutral: number }> = (() => {
+  const HILO = PROB_HILO;                   // ex B1→B5
+  const LOHI = PROB_LOHI;                   // new B1→B5
+  const out: Record<number, any> = {};
+  for (let b = 1; b <= 10; b++) {
+    const i = (b - 1) % 5;
+    const ex = b <= 5 ? HILO[i] : LOHI[i];
+    const nw = b <= 5 ? LOHI[i] : HILO[i];
+    out[b] = { ex, new: nw, neutral: 0.5 };
+  }
+  return out;
+})();
+
+// ==== Helpers ====
+const mean = (arr: number[]) =>
+  arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+
+function toPhase(block: number): Phase {
+  return block === 0 ? 'baseline' : 'testing';
+}
+
+interface SearchTarget {
+  shape: ShapeId;
+  col: ColorIdx;
+}
 
 // ===============================
 // Globals (render-agnostic)
@@ -105,8 +155,6 @@ let startTs = 0;
 
 let hitRt: number[] = [];
 let allRt: number[] = [];
-let correctCount = 0;
-let incorrectCount = 0;
 
 let change = NaN;                 // 1/0 actual present/absent on current trial
 let allStartTime: string[] = [];
@@ -114,9 +162,16 @@ let allClickTime: string[] = [];
 let allSetSizes: number[] = [];
 let allModes: string[] = [];
 let checkAns: ('right' | 'wrong' | 'late')[] = [];
-let targetDataResult: any = null;
 
 let timeouts: any[] = [];
+
+// --- เก็บสถานะล่าสุดของสิ่งเร้าที่จำเป็นต้องใช้ตอนบันทึกผล ---
+let lastTargetShape: ShapeId | null = null;
+let lastTargetColorIdx: ColorIdx | null = null;
+let lastTargetXY: { x: number; y: number } | null = null;
+let lastDistractorCounts = { sameShape_otherColor: 0, otherShape_sameColor: 0 };
+
+let COLOR_METRICS: any = null; // สำหรับดีบักดูค่าความต่างสี/ความสว่าง
 
 // ===============================
 // Utilities
@@ -252,8 +307,6 @@ function logCounterbalanceDebug(schedule: TrialRow[], userId: number) {
 // Schedule Builder (Baseline + 10 Testing Blocks)
 // ===============================
 function buildSchedule(userId: number): TrialRow[] {
-  const SET_SIZE = 31;
-
   // ---- Baseline 240 ----
   // role ละ 80 = 40 present + 40 absent
   const baseline: TrialRow[] = [];
@@ -267,12 +320,10 @@ function buildSchedule(userId: number): TrialRow[] {
   // ---- Testing 10 blocks = 480 ----
   // บล็อกละ 48 = role ละ 16 (present : absent ตาม p)
   const testing: TrialRow[] = [];
-  const probsFirst  = PROB_HILO;            // [0.9,0.7,0.5,0.3,0.1]
-  const probsSecond = PROB_LOHI;            // [0.1..0.9]
 
   for (let bi = 1; bi <= 10; bi++) {
-    const pEx  = bi <= 5 ? probsFirst [bi-1] : probsSecond[bi-6];
-    const pNew = bi <= 5 ? probsSecond[bi-1] : probsFirst [bi-6];
+    const pEx  = bi <= 5 ? PROB_HILO[bi-1] : PROB_LOHI[bi-6];
+    const pNew = bi <= 5 ? PROB_LOHI[bi-1] : PROB_HILO[bi-6];
     const pNeu = 0.5;
 
     const roles: Role[] = ['ex', 'new', 'neutral'];
@@ -302,7 +353,7 @@ function buildSchedule(userId: number): TrialRow[] {
 // ===============================
 function FAST(props: { userId: number }) {
   const navigate = useNavigate();
-  // เสียง (ถ้าอยากเปิด คอมเมนต์กลับ)
+  // เสียง (ถ้าจะใช้ให้เรียกเล่นตรง feedback)
   const [clickSound] = useSound(clickSoundSrc);
   const [combo2Sound] = useSound(combo2SoundSrc);
   const [losingSound] = useSound(losingSoundSrc);
@@ -336,7 +387,8 @@ function FAST(props: { userId: number }) {
   useEffect(() => {
     initState();
     createCanvas();
-
+    COLOR_METRICS = computeColorMetrics(COLORS, BG_COLOR, COLOR_PAIRS);
+    console.log("Color Metrics:", COLOR_METRICS);
     SCHEDULE = buildSchedule(props.userId);
     TRIAL_COUNT = SCHEDULE.length; // 720
 
@@ -359,8 +411,6 @@ function FAST(props: { userId: number }) {
 
     hitRt = [];
     allRt = [];
-    correctCount = 0;
-    incorrectCount = 0;
 
     change = NaN;
     allStartTime = [];
@@ -368,12 +418,26 @@ function FAST(props: { userId: number }) {
     allSetSizes = [];
     allModes = [];
     checkAns = [];
-    targetDataResult = null;
+
+    lastTargetShape = null;
+    lastTargetColorIdx = null;
+    lastTargetXY = null;
+    lastDistractorCounts = { sameShape_otherColor: 0, otherShape_sameColor: 0 };
   }
 
   function createCanvas() {
-    canvas = document.getElementById('myCanvas') as HTMLCanvasElement;
-    ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+    const el = document.getElementById('myCanvas') as HTMLCanvasElement | null;
+    if (!el) {
+      // ถ้า CJSWindow เป็นคนสร้าง canvas ให้แน่ใจว่า id="myCanvas" ถูกส่งจริง
+      console.warn('Canvas element #myCanvas not found at mount time.');
+      return;
+    }
+    canvas = el;
+    const _ctx = canvas.getContext('2d');
+    if (!_ctx) {
+      throw new Error('Cannot get 2D context from canvas.');
+    }
+    ctx = _ctx as CanvasRenderingContext2D;
     centerX = canvas.width / 2;
     centerY = canvas.height / 2;
     makeGrid();
@@ -430,7 +494,7 @@ function FAST(props: { userId: number }) {
     const roleResolved = row.role === 'baseline' ? roleFromPairIdx(props.userId, row.pairIdx) : row.role;
 
     console.log(
-    `[FAST trial ${idx}] block=${row.block} role=${roleResolved} pair=${row.pairIdx}:${PAIR_LABEL[row.pairIdx]} setSize=${row.setSize+1} hasTarget=${row.hasTarget}`
+      `[FAST trial ${idx}] block=${row.block} role=${roleResolved} pair=${row.pairIdx}:${PAIR_LABEL[row.pairIdx]} setSize=${row.setSize+1} hasTarget=${row.hasTarget}`
     );
 
     // map บทบาท → fixed target (shape,color,pair) สำหรับ user นี้
@@ -439,8 +503,7 @@ function FAST(props: { userId: number }) {
     let pairIdx: PairIdx;
 
     if (row.role === 'baseline') {
-      // baseline บันทึก pairIdx มาจากบทบาทต้นทางไว้แล้ว
-      // หา role ที่ pairIdx นี้แมตช์สำหรับ user นี้ แล้วใช้ fixedTargetFor(role)
+      // baseline: หา role ที่ pairIdx นี้ตรงสำหรับ user แล้วใช้ค่านั้น
       const roles: Role[] = ['ex', 'new', 'neutral'];
       const pick = roles.map(r => ({ r, ft: fixedTargetFor(props.userId, r) }))
                         .find(x => x.ft.pairIdx === row.pairIdx);
@@ -456,7 +519,7 @@ function FAST(props: { userId: number }) {
     setSearchTarget({ shape: targetShape, col: targetColorIdx });
 
     // วาดสิ่งเร้าตาม conjunction rule
-    createTrialStimulus(setSize, hasTarget, pairIdx, targetShape, targetColorIdx);
+    createTrialStimulus(setSize, hasTarget as 0 | 1, pairIdx, targetShape, targetColorIdx);
 
     // mark start time
     startTs = Date.now();
@@ -467,7 +530,8 @@ function FAST(props: { userId: number }) {
   // Stimulus drawing (conjunction)
   // -------------------------------
   function makeBackground() {
-    vismem.makeRectangle('bg', centerX, centerY, CANVAS_W, CANVAS_H, false, BG_COLOR, BG_COLOR);
+    // เติมพารามิเตอร์ปิดท้ายให้ตรงกับซิกเนเจอร์เดิมที่ใช้กับวัตถุอื่นๆ
+    vismem.makeRectangle('bg', centerX, centerY, CANVAS_W, CANVAS_H, false, BG_COLOR, BG_COLOR, 0, 0);
   }
 
   function createTrialStimulus(
@@ -507,6 +571,7 @@ function FAST(props: { userId: number }) {
 
     const nA = Math.floor(setSize / 2); // same-shape + other-color
     const nB = setSize - nA;            // same-color + other-shape
+    lastDistractorCounts = { sameShape_otherColor: nA, otherShape_sameColor: nB };
 
     const dShapes: ShapeId[] = [...Array(nA).fill(targetShape), ...Array(nB).fill(otherShape)];
     const dHexes: string[]  = [...Array(nA).fill(COLORS[otherColorIdx]), ...Array(nB).fill(COLORS[targetColorIdx])];
@@ -540,11 +605,9 @@ function FAST(props: { userId: number }) {
         vismem.makeRectangle('s', tx, ty, OBJ_SIZE, OBJ_SIZE, false, tHex, tHex, 0, 0);
       }
       change = 1;
-      targetDataResult = {
-        shape: targetShape === 1 ? 'circle' : 'square',
-        shapeParams: { parameterName: targetShape ? 'radius' : 'width', value: targetShape ? RADIUS : OBJ_SIZE, unit: 'px' },
-        color: tHex,
-      };
+      lastTargetShape = targetShape;
+      lastTargetColorIdx = targetColorIdx;
+      lastTargetXY = { x: X[setSize], y: Y[setSize] };
     } else {
       // absent → เติม distractor อีก 1 ตัว สลับชนิด A/B เพื่อบาลานซ์
       const useA = setSize % 2 === 0;
@@ -559,7 +622,9 @@ function FAST(props: { userId: number }) {
         vismem.makeRectangle('s', rx, ry, OBJ_SIZE, OBJ_SIZE, false, dHex, dHex, 0, 0);
       }
       change = 0;
-      targetDataResult = null;
+      lastTargetShape = null;
+      lastTargetColorIdx = null;
+      lastTargetXY = null;
     }
 
     vismem.drawObjects(ctx, vismem.objects);
@@ -569,24 +634,63 @@ function FAST(props: { userId: number }) {
   // Response & feedback
   // -------------------------------
   function checkResp(answerChange: 0 | 1) {
-    // clickSound(); // เปิดเสียงได้ถ้าต้องการ
     const rt = Date.now() - startTs;
     allRt.push(rt);
-    allClickTime.push(nowISO());
+    const ansISO = nowISO();
+    allClickTime.push(ansISO);
 
-    if (change === answerChange) {
-      // combo2Sound();
-      checkAns.push('right');
+    const isCorrect = (change === answerChange);
+    if (isCorrect) {
+      checkAns.push('right');  // ถ้าจะลบทิ้งภายหลังก็ได้ ตอนนี้ยังใช้โชว์ฟีดแบ็ค
       hitRt.push(rt);
-      correctCount++;
+      // combo2Sound(); // ถ้าต้องการเล่นเสียงถูก
     } else {
-      // losingSound();
       checkAns.push('wrong');
-      incorrectCount++;
+      // losingSound(); // ถ้าต้องการเล่นเสียงผิด
     }
 
-    // feedback สั้น ๆ แล้วไปต่อ
-    feedbackThenNext(checkAns[checkAns.length - 1]);
+    // === derive context of this trial ===
+    const row = SCHEDULE[currTrial];              // <-- มี block/role ใน row
+    const block = row.block;                      // 0=baseline, 1..10=testing
+    const phase = toPhase(block);
+    const role: Role = (row.role === 'baseline'
+      ? roleFromPairIdx(props.userId, row.pairIdx)
+      : row.role) as Role;
+
+    const targetShapeName: 'circle' | 'square' =
+      (lastTargetShape === 1 ? 'circle' : 'square');
+
+    const targetColorHex = (row.hasTarget && lastTargetColorIdx !== null)
+      ? COLORS[lastTargetColorIdx]
+      : null;
+
+    // startTime ISO ของ trial นี้ (เก็บไว้แล้วใน allStartTime)
+    const stISO = allStartTime[allStartTime.length - 1];
+
+    // === push TRIAL_LOG (Lean trial row) ===
+    TRIAL_LOG.push({
+      index: currTrial,
+      phase,
+      block,
+      role,
+      hasTarget: (change === 1),
+      respHasTarget: (answerChange === 1),
+      respCorrect: isCorrect,
+      rtMs: rt,
+      startTime: stISO,
+      answerTime: ansISO,
+      targetShape: targetShapeName,
+      targetColorHex,
+      targetXY: lastTargetXY,
+      distractors: {
+        sameShape_otherColor: lastDistractorCounts.sameShape_otherColor,
+        otherShape_sameColor: lastDistractorCounts.otherShape_sameColor
+      }
+    });
+
+    // feedback & next
+    const result = checkAns[checkAns.length - 1];
+    feedbackThenNext(result);
   }
 
   function feedbackThenNext(result: 'right' | 'wrong' | 'late') {
@@ -625,24 +729,92 @@ function FAST(props: { userId: number }) {
   // Finish & save
   // -------------------------------
   function finish() {
-    const payload = {
-      date: nowISO(),
-      userId: props.userId,
-      userSession: VERSION,
-      target: targetDataResult,
-      trialData: {
-        allRt,
-        hitRt,
-        correctCount,
-        incorrectCount,
-        allStartTime,
-        allClickTime,
-        allSetSizes,
-        allModes,
-        checkAns,
-      },
+    // ===== Summary =====
+    const overallCorrectRTs = TRIAL_LOG.filter(t => t.respCorrect).map(t => t.rtMs);
+    const overallWrongRTs   = TRIAL_LOG.filter(t => !t.respCorrect).map(t => t.rtMs);
+
+    const overall = {
+      correct: overallCorrectRTs.length,
+      incorrect: overallWrongRTs.length,
+      meanRtMs_correct: mean(overallCorrectRTs),
+      meanRtMs_wrong: mean(overallWrongRTs),
     };
-    saveJSONDataToClientDevice(payload, `Subject${props.userId}_${VERSION}_${nowISO()}`);
+
+    // byPhaseRole
+    const byPhaseRole: any[] = [];
+    (['baseline','testing'] as Phase[]).forEach(phase => {
+      (['ex','new','neutral'] as Role[]).forEach(role => {
+        const subset = TRIAL_LOG.filter(t => t.phase === phase && t.role === role);
+        if (!subset.length) return;
+        const corr = subset.filter(t => t.respCorrect).map(t => t.rtMs);
+        const wrng = subset.filter(t => !t.respCorrect).map(t => t.rtMs);
+        byPhaseRole.push({
+          phase, role,
+          nTrials: subset.length,
+          correct: corr.length,
+          incorrect: wrng.length,
+          meanRtMs_correct: mean(corr),
+          meanRtMs_wrong: mean(wrng),
+        });
+      });
+    });
+
+    // byBlockRole (block 0 = baseline)
+    const byBlockRole: any[] = [];
+    for (let b = 0; b <= 10; b++) {
+      (['ex','new','neutral'] as Role[]).forEach(role => {
+        const subset = TRIAL_LOG.filter(t => t.block === b && t.role === role);
+        if (!subset.length) return;
+        const corr = subset.filter(t => t.respCorrect).map(t => t.rtMs);
+        const wrng = subset.filter(t => !t.respCorrect).map(t => t.rtMs);
+        byBlockRole.push({
+          block: b,
+          role,
+          nTrials: subset.length,
+          correct: corr.length,
+          incorrect: wrng.length,
+          meanRtMs_correct: mean(corr),
+          meanRtMs_wrong: mean(wrng),
+        });
+      });
+    }
+
+    // ===== Payload (Lean schema) =====
+    const fx = {
+      ex: fixedTargetFor(props.userId, 'ex'),
+      new: fixedTargetFor(props.userId, 'new'),
+      neutral: fixedTargetFor(props.userId, 'neutral'),
+    };
+
+    const payload = {
+      meta: {
+        version: VERSION,
+        date: nowISO(),
+        userId: props.userId,
+      },
+      design: {
+        setSize: SET_SIZE + 1,           // จำนวนสิ่งเร้าบนจอเมื่อ present (กันที่หนึ่งให้ target)
+        blocks: 10,
+        baselineTrials: 240,
+        testingTrials: 480,
+        mode: 'conjunction',
+        colorPairs: COLOR_PAIRS.map(([a,b]) => [COLORS[a], COLORS[b]]),
+        probSchedule: PROB_SCHEDULE,
+      },
+      assignment: {
+        ex:      { pairIdx: fx.ex.pairIdx,      shape: fx.ex.shape === 1 ? 'circle' : 'square',      colorHex: COLORS[fx.ex.color] },
+        new:     { pairIdx: fx.new.pairIdx,     shape: fx.new.shape === 1 ? 'circle' : 'square',     colorHex: COLORS[fx.new.color] },
+        neutral: { pairIdx: fx.neutral.pairIdx, shape: fx.neutral.shape === 1 ? 'circle' : 'square', colorHex: COLORS[fx.neutral.color] },
+      },
+      trials: TRIAL_LOG,
+      summary: {
+        overall,
+        byPhaseRole,
+        byBlockRole,
+      }
+    };
+
+    saveJSONDataToClientDevice(payload, `Subject${props.userId}_${VERSION}_${nowISO()}.json`);
     navigate('/landing');
   }
 
