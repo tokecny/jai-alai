@@ -1,4 +1,4 @@
-// FAST.tsx — refactored for readability + fixed-target per user + baseline/testing schedule
+// FAST_3R_10B.tsx — refactored for readability + fixed-target per user + baseline/testing schedule
 // - Baseline 240 trials (type ละ 80 = 40 present + 40 absent)
 // - Testing 10 blocks = 480 trials (block ละ 48 = role ละ 16)
 // - Ex: 0.9→0.1 (B1..B5), 0.1→0.9 (B6..B10)
@@ -66,7 +66,7 @@ let TRIAL_LOG: TrialLog[] = [];
 // ===============================
 // Visual & Task Constants
 // ===============================
-const VERSION = 'FAST';
+const VERSION = 'FAST_3R_10B';
 
 const CANVAS_W = 600;
 const CANVAS_H = 600;
@@ -241,7 +241,7 @@ function roleFromPairIdx(userId: number, pairIdx: PairIdx): Role {
 }
 
 function logCounterbalanceDebug(schedule: TrialRow[], userId: number) {
-  console.group(`[FAST DEBUG] Counter-balance | userId=${userId}`);
+  console.group(`[FAST_3R_10B DEBUG] Counter-balance | userId=${userId}`);
   console.log('userId =', userId);
 
   // --- Fixed targets per role ---
@@ -299,7 +299,7 @@ function logCounterbalanceDebug(schedule: TrialRow[], userId: number) {
   }));
 
   // เผื่ออยากสำรวจบนคอนโซล
-  (window as any).__FAST_DEBUG__ = { userId, schedule };
+  (window as any).__FAST_3R_10B_DEBUG__ = { userId, schedule };
   console.groupEnd();
 }
 
@@ -351,7 +351,7 @@ function buildSchedule(userId: number): TrialRow[] {
 // ===============================
 // React Component
 // ===============================
-function FAST(props: { userId: number }) {
+function FAST_3R_10B(props: { userId: number }) {
   const navigate = useNavigate();
   // เสียง (ถ้าจะใช้ให้เรียกเล่นตรง feedback)
   const [clickSound] = useSound(clickSoundSrc);
@@ -494,7 +494,7 @@ function FAST(props: { userId: number }) {
     const roleResolved = row.role === 'baseline' ? roleFromPairIdx(props.userId, row.pairIdx) : row.role;
 
     console.log(
-      `[FAST trial ${idx}] block=${row.block} role=${roleResolved} pair=${row.pairIdx}:${PAIR_LABEL[row.pairIdx]} setSize=${row.setSize+1} hasTarget=${row.hasTarget}`
+      `[FAST_3R_10B trial ${idx}] block=${row.block} role=${roleResolved} pair=${row.pairIdx}:${PAIR_LABEL[row.pairIdx]} setSize=${row.setSize+1} hasTarget=${row.hasTarget}`
     );
 
     // map บทบาท → fixed target (shape,color,pair) สำหรับ user นี้
@@ -840,4 +840,4 @@ function FAST(props: { userId: number }) {
   );
 }
 
-export default FAST;
+export default FAST_3R_10B;
