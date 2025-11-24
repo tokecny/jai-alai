@@ -53,26 +53,37 @@ export default function ParticipantForm(props: {
                     <div>
                         <button
                             onClick={(e) => {
-                                e.preventDefault(); // ป้องกันการรีเฟรชหน้า
-                                const numValue = Number(promptUserId); // แปลง string เป็น number
+                                e.preventDefault();
+                                const numValue = Number(promptUserId);
+
                                 if (promptUserId === "") {
                                     alert("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
-                                    setPromptUserId(""); // เคลียร์ input
-                                } else if (promptUserId.length < 3) {
-                                    alert("กรุณากรอกหมายเลขผู้เข้าร่วมงานวิจัยให้ครบ 3 หลัก");
-                                    setPromptUserId(""); // เคลียร์ input
-                                } else {
-                                    // ตรวจสอบว่าหมายเลขอยู่ในช่วงที่อนุญาต (001 ถึง 016) หรือหมายเลข 428
-                                    if ((numValue < 1 || numValue > 48) && numValue !== 428) {
-                                        alert("กรุณากรอกหมายเลขในช่วง 001 ถึง 048");
-                                        setPromptUserId(""); // เคลียร์ input
-                                    } else {
-                                        props.setUserId(numValue); // ตั้งค่าผู้ใช้
-                                        navigate("/landing"); // นำทางไปยังหน้า landing
-                                        saveDataToLocalStorage('userId', numValue.toString().padStart(3, '0')); // บันทึกข้อมูลใน Local Storage
-                                    }
+                                    setPromptUserId("");
+                                    return;
                                 }
-                            }}
+                                if (promptUserId.length < 3) {
+                                    alert("กรุณากรอกหมายเลขผู้เข้าร่วมงานวิจัยให้ครบ 3 หลัก");
+                                    setPromptUserId("");
+                                    return;
+                                }
+                                if ((numValue < 1 || numValue > 16) && numValue !== 428) {
+                                    alert("กรุณากรอกหมายเลขในช่วง 001 ถึง 016");
+                                    setPromptUserId("");
+                                    return;
+                                }
+
+                                // 1) เซฟ userId ก่อน (ให้ key ตรงกับ calibration.ts)
+                                const userIdStr = numValue.toString().padStart(3, "0");
+                                saveDataToLocalStorage("userId", userIdStr); // => localStorage.setItem('userId', '00x')
+                                props.setUserId(numValue);                    // state ภายในแอป
+
+                                // 2) รีเซ็ต calibration + instruction flag (บังคับทำใหม่ / แสดงหน้าแนะนำใหม่)
+                                localStorage.removeItem("FAST_CALIBRATION");
+                                sessionStorage.removeItem("INSTR_SHOWN");
+
+                                // 3) ไปคาลิเบรต แล้วให้เด้งต่อไปหน้า instructions
+                                navigate("/calibration", { replace: true, state: { next: "/instructions" } });
+                                }}
                             className="flex w-full justify-center rounded-md bg-pink-400 px-3 py-1.5 text-sm font-semibold leading-6 text-stone-100 shadow-sm hover:bg-pink-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-400">
                             เข้าสู่การทดสอบ
                         </button>
