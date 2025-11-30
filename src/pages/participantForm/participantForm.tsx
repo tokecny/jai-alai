@@ -66,8 +66,8 @@ export default function ParticipantForm(props: {
                                     setPromptUserId("");
                                     return;
                                 }
-                                if ((numValue < 1 || numValue > 16) && numValue !== 428) {
-                                    alert("กรุณากรอกหมายเลขในช่วง 001 ถึง 016");
+                                if ((numValue < 1 || numValue > 24) && numValue !== 428) {
+                                    alert("กรุณากรอกหมายเลขในช่วง 001 ถึง 024");
                                     setPromptUserId("");
                                     return;
                                 }
