@@ -5,7 +5,9 @@
 //   new p per block: [10,10,10,10,10,10,30,50,70,90,90,70,50,30,10]
 // - Countdown ที่ trial indices: 0, 160, 320, 480  (\n*หมายเหตุ*: 0=เริ่ม, 160=จบ baseline, +5 blocks=+160→320, +5 blocks=+160→480)
 // - Conjunction rule: target=(shape+color); distractors = same-shape+other-color & same-color+other-shape
-// - Fixed target per user (shape+color per role) + counter-balance 24 แบบ (ดูคอมเมนต์ด้านล่าง)
+// - Fixed target per user (shape+color per role)
+// - Counter-balance = 16 unique assignment patterns
+// - If N=32 subjects => 16 patterns × 2 repeats
 
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -191,36 +193,138 @@ function otherColorInPair(pairIdx: PairIdx, color: ColorIdx): ColorIdx {
 }
 
 // ===============================
-// Fixed target per user (counter-balance across 24)
+// Fixed target per user (16 unique patterns × repeat)
+// - ครบทุก allowed combinations ภายใต้ constraints:
+//   1) ex/new คนละ shape เสมอ
+//   2) ex/new คนละ color pair เสมอ
+//   3) pair ของสีคงเดิม:
+//      pair 0 = 0°↔180° = red ↔ cyan
+//      pair 1 = 90°↔270° = green ↔ purple
+// - ถ้าเก็บ 32 คน => 16 patterns × 2 repeats
 // ===============================
-// รูปทรงตามตำแหน่งในบล็อก 4 คน (group*4 + k)
-const SHAPE_SEQ_EX:  ShapeId[] = [1, 1, 0, 0]; // circle,circle,square,square (ตามตัวอย่าง: 001 เริ่มที่วงกลมเป็น ex)
-const SHAPE_SEQ_NEW: ShapeId[] = [0, 0, 1, 1]; // square,square,circle,circle (new สลับกับ ex)
 
-// การแม็พตามที่ผู้ใช้ต้องการ:
-//  - ใช้ subject id (1-based) กำหนดทั้ง shape และ pair
-//  - ex: pair สลับทุก subject (1→pair0, 2→pair1, 3→pair0, 4→pair1, ...)
-//       shape วงกลม,วงกลม,สี่เหลี่ยม,สี่เหลี่ยม วนซ้ำ (k=0..3)
-//  - new: ใช้คู่สีตรงข้ามกับ ex และ shape ตรงข้ามกับ ex ใน k เดียวกัน
-//  - ภายใน pair เลือกสีฝั่ง A/B ตาม k parity (k คู่→A, k คี่→B)
-//  - วนไปจะกระจายครบทุก combination อย่างสมดุลภายใน 24 คน
-function fixedTargetFor(userId: number, role: Role) {
-  const zero = Math.max(0, Math.floor(userId - 1)); // 0-based
-  const k = zero % 4;                               // 0..3 (ตำแหน่งในรอบ 4 คน)
+type FixedAssignment = {
+  pairIdx: PairIdx;
+  shape: ShapeId;  // 0=square, 1=circle
+  color: ColorIdx;
+};
 
-  // คู่สีของ ex สลับทุก subject: id คี่→pair 0 (0°↔180°), id คู่→pair 1 (90°↔270°)
-  const exPairIdx: PairIdx = (zero % 2 === 0) ? 0 : 1;
-  const newPairIdx: PairIdx = (exPairIdx === 0 ? 1 : 0);
-  const pairIdx: PairIdx = (role === 'ex' ? exPairIdx : newPairIdx);
+type SubjectPattern = {
+  ex: FixedAssignment;
+  new: FixedAssignment;
+};
 
-  // shape ตามลำดับที่กำหนด: ex=[1,1,0,0], new=[0,0,1,1]
-  const shape: ShapeId = (role === 'ex') ? SHAPE_SEQ_EX[k] : SHAPE_SEQ_NEW[k];
+function pairIdxFromColor(color: ColorIdx): PairIdx {
+  if (color === 0 || color === 2) return 0; // แดง / ฟ้า
+  return 1; // เขียว / ม่วง
+}
 
-  // สีภายในคู่: k parity เป็นตัวเลือกฝั่งสี A/B
-  const [A, B] = COLOR_PAIRS[pairIdx];
-  const color: ColorIdx = (k % 2 === 0 ? A : B);
+function shapeName(shape: ShapeId) {
+  return shape === 1 ? 'circle' : 'square';
+}
 
-  return { pairIdx, shape, color };
+function colorName(color: ColorIdx) {
+  switch (color) {
+    case 0: return 'red';
+    case 1: return 'green';
+    case 2: return 'cyan';
+    case 3: return 'purple';
+    default: return 'unknown';
+  }
+}
+
+// 16 patterns 
+// หลักคิด:
+// - ex มีได้ 8 แบบ (4 สี × 2 shapes)
+// - เมื่อ fix ex แล้ว new ถูกบังคับให้:
+//    * ใช้อีกรูปร่างหนึ่ง
+//    * ใช้อีก color pair หนึ่ง
+//    * เลือกได้ 2 สีใน pair นั้น
+//   => รวมทั้งหมด 8 × 2 = 16 patterns
+const SUBJECT_PATTERNS_16: SubjectPattern[] = [
+  // ถ้า ex = วงกลมแดง
+  { ex: { pairIdx: 0, shape: 1, color: 0 }, new: { pairIdx: 1, shape: 0, color: 1 } }, // new สี่เหลี่ยมเขียว
+  { ex: { pairIdx: 0, shape: 1, color: 0 }, new: { pairIdx: 1, shape: 0, color: 3 } }, // new สี่เหลี่ยมม่วง
+
+  // ถ้า ex = สี่เหลี่ยมแดง
+  { ex: { pairIdx: 0, shape: 0, color: 0 }, new: { pairIdx: 1, shape: 1, color: 1 } }, // new วงกลมเขียว
+  { ex: { pairIdx: 0, shape: 0, color: 0 }, new: { pairIdx: 1, shape: 1, color: 3 } }, // new วงกลมม่วง
+
+  // ถ้า ex = วงกลมฟ้า
+  { ex: { pairIdx: 0, shape: 1, color: 2 }, new: { pairIdx: 1, shape: 0, color: 1 } }, // new สี่เหลี่ยมเขียว
+  { ex: { pairIdx: 0, shape: 1, color: 2 }, new: { pairIdx: 1, shape: 0, color: 3 } }, // new สี่เหลี่ยมม่วง
+
+  // ถ้า ex = สี่เหลี่ยมฟ้า
+  { ex: { pairIdx: 0, shape: 0, color: 2 }, new: { pairIdx: 1, shape: 1, color: 1 } }, // new วงกลมเขียว
+  { ex: { pairIdx: 0, shape: 0, color: 2 }, new: { pairIdx: 1, shape: 1, color: 3 } }, // new วงกลมม่วง
+
+  // ถ้า ex = วงกลมเขียว
+  { ex: { pairIdx: 1, shape: 1, color: 1 }, new: { pairIdx: 0, shape: 0, color: 0 } }, // new สี่เหลี่ยมแดง
+  { ex: { pairIdx: 1, shape: 1, color: 1 }, new: { pairIdx: 0, shape: 0, color: 2 } }, // new สี่เหลี่ยมฟ้า
+
+  // ถ้า ex = สี่เหลี่ยมเขียว
+  { ex: { pairIdx: 1, shape: 0, color: 1 }, new: { pairIdx: 0, shape: 1, color: 0 } }, // new วงกลมแดง
+  { ex: { pairIdx: 1, shape: 0, color: 1 }, new: { pairIdx: 0, shape: 1, color: 2 } }, // new วงกลมฟ้า
+
+  // ถ้า ex = วงกลมม่วง
+  { ex: { pairIdx: 1, shape: 1, color: 3 }, new: { pairIdx: 0, shape: 0, color: 0 } }, // new สี่เหลี่ยมแดง
+  { ex: { pairIdx: 1, shape: 1, color: 3 }, new: { pairIdx: 0, shape: 0, color: 2 } }, // new สี่เหลี่ยมฟ้า
+
+  // ถ้า ex = สี่เหลี่ยมม่วง
+  { ex: { pairIdx: 1, shape: 0, color: 3 }, new: { pairIdx: 0, shape: 1, color: 0 } }, // new วงกลมแดง
+  { ex: { pairIdx: 1, shape: 0, color: 3 }, new: { pairIdx: 0, shape: 1, color: 2 } }, // new วงกลมฟ้า
+];
+
+function validateCounterbalanceTable() {
+  const exSet = new Set<string>();
+  const newSet = new Set<string>();
+
+  SUBJECT_PATTERNS_16.forEach((pat, i) => {
+    // shape ต้องตรงข้ามกัน
+    if (pat.ex.shape === pat.new.shape) {
+      throw new Error(`[FAST_2R_15B_CC] Pattern ${i + 1}: ex/new must have opposite shapes`);
+    }
+
+    // pair ต้องคนละคู่
+    if (pat.ex.pairIdx === pat.new.pairIdx) {
+      throw new Error(`[FAST_2R_15B_CC] Pattern ${i + 1}: ex/new must use different color pairs`);
+    }
+
+    // color ต้องอยู่ใน pair ที่ประกาศไว้จริง
+    if (pairIdxFromColor(pat.ex.color) !== pat.ex.pairIdx) {
+      throw new Error(`[FAST_2R_15B_CC] Pattern ${i + 1}: ex color/pair mismatch`);
+    }
+    if (pairIdxFromColor(pat.new.color) !== pat.new.pairIdx) {
+      throw new Error(`[FAST_2R_15B_CC] Pattern ${i + 1}: new color/pair mismatch`);
+    }
+
+    exSet.add(`${pat.ex.shape}-${pat.ex.color}`);
+    newSet.add(`${pat.new.shape}-${pat.new.color}`);
+  });
+
+  // ex/new ควรครบทุก shape×color อย่างละ 8 แบบ
+  if (exSet.size !== 8) {
+    throw new Error(`[FAST_2R_15B_CC] EX combos incomplete: got ${exSet.size}, expected 8`);
+  }
+  if (newSet.size !== 8) {
+    throw new Error(`[FAST_2R_15B_CC] NEW combos incomplete: got ${newSet.size}, expected 8`);
+  }
+
+  console.log('[FAST_2R_15B_CC] Counterbalance table validated.');
+  console.table(
+    SUBJECT_PATTERNS_16.map((pat, i) => ({
+      pattern: i + 1,
+      ex: `${shapeName(pat.ex.shape)} ${colorName(pat.ex.color)}`,
+      new: `${shapeName(pat.new.shape)} ${colorName(pat.new.color)}`,
+    }))
+  );
+}
+
+function fixedTargetFor(userId: number, role: Role): FixedAssignment {
+  const zero = Math.max(0, Math.floor(userId - 1));
+  const patternIdx = zero % SUBJECT_PATTERNS_16.length; // 0..15 วนทุก 16 คน
+  const pat = SUBJECT_PATTERNS_16[patternIdx];
+  return pat[role];
 }
 
 function roleFromPairIdx(userId: number, pairIdx: PairIdx): Role {
@@ -359,6 +463,7 @@ function FAST_2R_15B_CC(props: { userId: number }) {
     tryEnterFullscreen();
     initState();
     createCanvas();
+    validateCounterbalanceTable();
     COLOR_METRICS = computeColorMetrics(COLORS, BG_COLOR, COLOR_PAIRS);
     console.log('Color Metrics:', COLOR_METRICS);
     SCHEDULE = buildSchedule(props.userId);
