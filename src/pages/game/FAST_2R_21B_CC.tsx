@@ -1,11 +1,10 @@
-// FAST_2R_15B_CC — 2 roles (ex/new), 15 testing blocks, 2 color-pairs (0°↔180°, 90°↔270°)
+// FAST_2R_21B_CC — 2 roles (ex/new), 21 testing blocks, 2 color-pairs (0°↔180°, 90°↔270°)
 // - Baseline 160 trials (role ละ 80 = 40 present + 40 absent)
-// - Testing 15 blocks = 480 trials (block ละ 32 = role ละ 16)
-// - ex p per block:  [90,70,50,30,10,10,30,50,70,90,10,10,10,10,10]
-//   new p per block: [10,10,10,10,10,10,30,50,70,90,90,70,50,30,10]
-// - Countdown ที่ trial indices: 0, 160, 320, 480  (\n*หมายเหตุ*: 0=เริ่ม, 160=จบ baseline, +5 blocks=+160→320, +5 blocks=+160→480)
-// - Conjunction rule: target=(shape+color); distractors = same-shape+other-color & same-color+other-shape
-// - Fixed target per user (shape+color per role)
+// - Testing 21 blocks
+// - ex p per block:  [95,80,65,50,35,20,5,5,20,35,50,65,80,95,10,10,10,10,10,10,10]
+//   new p per block: [10,10,10,10,10,10,10,5,20,35,50,65,80,95,95,80,65,50,35,20,5]
+// - 20 trials per role per block (block ละ 40 รวม ex+new)
+// - Countdown ที่ trial indices: 0, 160, 440, 720
 // - Counter-balance = 16 unique assignment patterns
 // - If N=32 subjects => 16 patterns × 2 repeats
 
@@ -70,7 +69,7 @@ const calibration = getCalibration();
 // ===============================
 // Visual & Task Constants
 // ===============================
-const VERSION = 'FAST_2R_15B_CC';
+const VERSION = 'FAST_2R_21B_CC';
 
 const CANVAS_W = 600;
 const CANVAS_H = 600;
@@ -112,26 +111,62 @@ const PAIR_LABEL: Record<number, string> = {
   1: '90°↔270°',
 };
 
-// ==== Prob schedule arrays (length 15) ====
-const EX_PROB = [0.9,0.7,0.5,0.3,0.1, 0.1,0.3,0.5,0.7,0.9, 0.1,0.1,0.1,0.1,0.1];
-const NEW_PROB = [0.1,0.1,0.1,0.1,0.1, 0.1,0.3,0.5,0.7,0.9, 0.9,0.7,0.5,0.3,0.1];
+// ==== Testing schedule: 21 blocks ====
+// ใช้ integer counts โดยตรง เพราะ block ละ 20 trials ต่อ role
+// ex p% :  [95,80,65,50,35,20,5, 5,20,35,50,65,80,95, 10,10,10,10,10,10,10]
+// new p% : [10,10,10,10,10,10,10, 5,20,35,50,65,80,95, 95,80,65,50,35,20,5]
 
-// ==== Prob schedule (เพื่อใส่ใน payload.design.probSchedule) ====
+const TEST_BLOCKS = 21;
+const PHASE_BLOCKS = 7;
+
+const EX_PRESENT_COUNTS = [
+  19,16,13,10,7,4,1,
+  1,4,7,10,13,16,19,
+  2,2,2,2,2,2,2
+];
+
+const NEW_PRESENT_COUNTS = [
+  2,2,2,2,2,2,2,
+  1,4,7,10,13,16,19,
+  19,16,13,10,7,4,1
+];
+
 const PROB_SCHEDULE: Record<number, { ex: number; new: number }> = (() => {
-  const out: Record<number, any> = {};
-  for (let b = 1; b <= 15; b++) out[b] = { ex: EX_PROB[b-1], new: NEW_PROB[b-1] };
+  const out: Record<number, { ex: number; new: number }> = {};
+  for (let b = 1; b <= TEST_BLOCKS; b++) {
+    out[b] = {
+      ex: EX_PRESENT_COUNTS[b - 1] / 20,
+      new: NEW_PRESENT_COUNTS[b - 1] / 20,
+    };
+  }
   return out;
 })();
 
 // ---- Derived trial-count landmarks for countdown ----
+// Landmarks:
+// 0   = start baseline
+// 160 = end baseline / start phase 1
+// 440 = start phase 2
+// 720 = start phase 3
 const BASELINE_PER_ROLE = 80;
 const ROLES: Role[] = ['ex','new'];
 const ROLES_COUNT = ROLES.length; // 2
+
 const BASELINE_TOTAL = BASELINE_PER_ROLE * ROLES_COUNT; // 160
-const TEST_TRIALS_PER_ROLE_PER_BLOCK = 16;
-const TEST_TRIALS_PER_BLOCK = TEST_TRIALS_PER_ROLE_PER_BLOCK * ROLES_COUNT; // 32
-// Landmarks: start, end-of-baseline, end-of-5-blocks, end-of-10-blocks
-const COUNTDOWN_AT = [0, BASELINE_TOTAL, BASELINE_TOTAL + 5*TEST_TRIALS_PER_BLOCK, BASELINE_TOTAL + 10*TEST_TRIALS_PER_BLOCK];
+
+// 20 trials ต่อ role ต่อ block
+const TEST_TRIALS_PER_ROLE_PER_BLOCK = 20;
+const TEST_TRIALS_PER_BLOCK = TEST_TRIALS_PER_ROLE_PER_BLOCK * ROLES_COUNT; // 40
+
+// Phase 1 = blocks 1..7
+// Phase 2 = blocks 8..14
+// Phase 3 = blocks 15..21
+const COUNTDOWN_AT = [
+  0,                                                     // เริ่ม baseline
+  BASELINE_TOTAL,                                        // เริ่ม phase 1
+  BASELINE_TOTAL + PHASE_BLOCKS * TEST_TRIALS_PER_BLOCK, // เริ่ม phase 2
+  BASELINE_TOTAL + (PHASE_BLOCKS * 2) * TEST_TRIALS_PER_BLOCK, // เริ่ม phase 3
+];
 
 // ==== Helpers ====
 const mean = (arr: number[]) =>
@@ -282,20 +317,20 @@ function validateCounterbalanceTable() {
   SUBJECT_PATTERNS_16.forEach((pat, i) => {
     // shape ต้องตรงข้ามกัน
     if (pat.ex.shape === pat.new.shape) {
-      throw new Error(`[FAST_2R_15B_CC] Pattern ${i + 1}: ex/new must have opposite shapes`);
+      throw new Error(`[FAST_2R_21B_CC] Pattern ${i + 1}: ex/new must have opposite shapes`);
     }
 
     // pair ต้องคนละคู่
     if (pat.ex.pairIdx === pat.new.pairIdx) {
-      throw new Error(`[FAST_2R_15B_CC] Pattern ${i + 1}: ex/new must use different color pairs`);
+      throw new Error(`[FAST_2R_21B_CC] Pattern ${i + 1}: ex/new must use different color pairs`);
     }
 
     // color ต้องอยู่ใน pair ที่ประกาศไว้จริง
     if (pairIdxFromColor(pat.ex.color) !== pat.ex.pairIdx) {
-      throw new Error(`[FAST_2R_15B_CC] Pattern ${i + 1}: ex color/pair mismatch`);
+      throw new Error(`[FAST_2R_21B_CC] Pattern ${i + 1}: ex color/pair mismatch`);
     }
     if (pairIdxFromColor(pat.new.color) !== pat.new.pairIdx) {
-      throw new Error(`[FAST_2R_15B_CC] Pattern ${i + 1}: new color/pair mismatch`);
+      throw new Error(`[FAST_2R_21B_CC] Pattern ${i + 1}: new color/pair mismatch`);
     }
 
     exSet.add(`${pat.ex.shape}-${pat.ex.color}`);
@@ -304,13 +339,13 @@ function validateCounterbalanceTable() {
 
   // ex/new ควรครบทุก shape×color อย่างละ 8 แบบ
   if (exSet.size !== 8) {
-    throw new Error(`[FAST_2R_15B_CC] EX combos incomplete: got ${exSet.size}, expected 8`);
+    throw new Error(`[FAST_2R_21B_CC] EX combos incomplete: got ${exSet.size}, expected 8`);
   }
   if (newSet.size !== 8) {
-    throw new Error(`[FAST_2R_15B_CC] NEW combos incomplete: got ${newSet.size}, expected 8`);
+    throw new Error(`[FAST_2R_21B_CC] NEW combos incomplete: got ${newSet.size}, expected 8`);
   }
 
-  console.log('[FAST_2R_15B_CC] Counterbalance table validated.');
+  console.log('[FAST_2R_21B_CC] Counterbalance table validated.');
   console.table(
     SUBJECT_PATTERNS_16.map((pat, i) => ({
       pattern: i + 1,
@@ -334,7 +369,7 @@ function roleFromPairIdx(userId: number, pairIdx: PairIdx): Role {
 }
 
 function logCounterbalanceDebug(schedule: TrialRow[], userId: number) {
-  console.group(`[FAST_2R_15B_CC DEBUG] Counter-balance | userId=${userId}`);
+  console.group(`[FAST_2R_21B_CC DEBUG] Counter-balance | userId=${userId}`);
   console.log('userId =', userId);
 
   // --- Fixed targets per role ---
@@ -364,8 +399,8 @@ function logCounterbalanceDebug(schedule: TrialRow[], userId: number) {
   });
   console.table(baseSummary);
 
-  // --- Testing summary per block (1..15) ---
-  for (let b = 1; b <= 15; b++) {
+  // --- Testing summary per block (1..21) ---
+  for (let b = 1; b <= TEST_BLOCKS; b++) {
     const rows = schedule.filter(r => r.block === b);
     const perBlock = (ROLES as Role[]).map((r) => {
       const pIdx = fixedTargetFor(userId, r).pairIdx;
@@ -391,7 +426,7 @@ function logCounterbalanceDebug(schedule: TrialRow[], userId: number) {
     };
   }));
 
-  (window as any).__FAST_2R_15B_CC_DEBUG__ = { userId, schedule };
+  (window as any).__FAST_2R_21B_CC_DEBUG__ = { userId, schedule };
   console.groupEnd();
 }
 
@@ -409,21 +444,43 @@ function buildSchedule(userId: number): TrialRow[] {
   });
   Shuffle(baseline);
 
-  // ---- Testing 15 blocks = 480 ----
-  // บล็อกละ 32 = role ละ 16 (present : absent ตาม p)
+    // ---- Testing 21 blocks = 840 ----
+  // block ละ 40 = role ละ 20
   const testing: TrialRow[] = [];
-  for (let bi = 1; bi <= 15; bi++) {
+  for (let bi = 1; bi <= TEST_BLOCKS; bi++) {
     let blockRows: TrialRow[] = [];
+
     for (const role of ROLES) {
       const { pairIdx } = fixedTargetFor(userId, role);
-      const trialsPerRole = TEST_TRIALS_PER_ROLE_PER_BLOCK; // 16
-      const p = (role === 'ex') ? EX_PROB[bi-1] : NEW_PROB[bi-1];
-      const presentN = Math.round(trialsPerRole * p);
-      const absentN  = trialsPerRole - presentN;
-      for (let i = 0; i < presentN; i++) blockRows.push({ setSize: SET_SIZE, hasTarget: 1, role, pairIdx, block: bi });
-      for (let i = 0; i < absentN;  i++) blockRows.push({ setSize: SET_SIZE, hasTarget: 0, role, pairIdx, block: bi });
+      const presentN =
+        role === 'ex'
+          ? EX_PRESENT_COUNTS[bi - 1]
+          : NEW_PRESENT_COUNTS[bi - 1];
+
+      const absentN = TEST_TRIALS_PER_ROLE_PER_BLOCK - presentN;
+
+      for (let i = 0; i < presentN; i++) {
+        blockRows.push({
+          setSize: SET_SIZE,
+          hasTarget: 1,
+          role,
+          pairIdx,
+          block: bi,
+        });
+      }
+
+      for (let i = 0; i < absentN; i++) {
+        blockRows.push({
+          setSize: SET_SIZE,
+          hasTarget: 0,
+          role,
+          pairIdx,
+          block: bi,
+        });
+      }
     }
-    Shuffle(blockRows); // "pure random" ในบล็อก
+
+    Shuffle(blockRows);
     testing.push(...blockRows);
   }
 
@@ -433,7 +490,7 @@ function buildSchedule(userId: number): TrialRow[] {
 // ===============================
 // React Component
 // ===============================
-function FAST_2R_15B_CC(props: { userId: number }) {
+function FAST_2R_21B_CC(props: { userId: number }) {
   const navigate = useNavigate();
   const [clickSound] = useSound(clickSoundSrc);
   const [combo2Sound] = useSound(combo2SoundSrc);
@@ -554,7 +611,7 @@ function FAST_2R_15B_CC(props: { userId: number }) {
     const { setSize, hasTarget } = row;
     const roleResolved = row.role === 'baseline' ? roleFromPairIdx(props.userId, row.pairIdx) : row.role;
 
-    console.log(`[FAST_2R_15B_CC trial ${idx}] block=${row.block} role=${roleResolved} pair=${row.pairIdx}:${PAIR_LABEL[row.pairIdx]} setSize=${row.setSize+1} hasTarget=${row.hasTarget}`);
+    console.log(`[FAST_2R_21B_CC trial ${idx}] block=${row.block} role=${roleResolved} pair=${row.pairIdx}:${PAIR_LABEL[row.pairIdx]} setSize=${row.setSize+1} hasTarget=${row.hasTarget}`);
 
     // map บทบาท → fixed target (shape,color,pair) สำหรับ user นี้
     let targetShape: ShapeId;
@@ -736,7 +793,7 @@ function FAST_2R_15B_CC(props: { userId: number }) {
 
     // byBlockRole (block 0 = baseline)
     const byBlockRole: any[] = [];
-    for (let b = 0; b <= 15; b++) {
+    for (let b = 0; b <= TEST_BLOCKS; b++) {
       (ROLES as Role[]).forEach(role => {
         const subset = TRIAL_LOG.filter(t => t.block === b && t.role === role);
         if (!subset.length) return;
@@ -752,9 +809,11 @@ function FAST_2R_15B_CC(props: { userId: number }) {
       meta: { version: VERSION, date: nowISO(), userId: props.userId, calibration, },
       design: {
         setSize: SET_SIZE + 1,
-        blocks: 15,
+        blocks: TEST_BLOCKS,
         baselineTrials: BASELINE_TOTAL,
-        testingTrials: 480,
+        testingTrials: TEST_BLOCKS * TEST_TRIALS_PER_BLOCK,
+        trialsPerRolePerBlock: TEST_TRIALS_PER_ROLE_PER_BLOCK,
+        trialsPerBlockTotal: TEST_TRIALS_PER_BLOCK,
         mode: 'conjunction',
         colorPairs: COLOR_PAIRS.map(([a,b]) => [COLORS[a], COLORS[b]]),
         probSchedule: PROB_SCHEDULE,
@@ -796,4 +855,4 @@ function FAST_2R_15B_CC(props: { userId: number }) {
   );
 }
 
-export default FAST_2R_15B_CC;
+export default FAST_2R_21B_CC;

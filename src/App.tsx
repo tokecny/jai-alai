@@ -7,7 +7,7 @@ import CalibLite from './components/calibrate/CalibLite';
 import Instructions from './pages/gameInstruction/Instructions';
 import { getDataFromLocalStorage } from './uitls/offline';
 import FAST_3R_10B from './pages/game/FAST_3R_10B';
-import FAST_2R_15B_CC from './pages/game/FAST_2R_15B_CC';
+import FAST_2R_21B_CC from './pages/game/FAST_2R_21B_CC';
 import FAST_2R_15B_TC from './pages/game/FAST_2R_15B_TC';
 import ProtectedRoute from './components/protectionRoute';
 
@@ -97,7 +97,7 @@ function App() {
       path="/search-in-the-crowd-cc"
       element={
         <ProtectedRoute>
-          <FAST_2R_15B_CC userId={(userId ?? 0)} />
+          <FAST_2R_21B_CC userId={(userId ?? 0)} />
         </ProtectedRoute>
       }
     />
