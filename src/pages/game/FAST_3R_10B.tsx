@@ -364,20 +364,20 @@ function FAST_3R_10B(props: { userId: number }) {
   // สำหรับแสดง legend/ตัวอย่างบน UI
   const searchTargetList = useMemo(() => ([
     [
-      { description: 'สี่เหลี่ยมสีแดง', color: COLORS[0], shape: 'square' },
-      { description: 'สี่เหลี่ยมสีเขียวมะกอก', color: COLORS[1], shape: 'square' },
-      { description: 'สี่เหลี่ยมสีเขียว', color: COLORS[2], shape: 'square' },
-      { description: 'สี่เหลี่ยมสีฟ้า', color: COLORS[3], shape: 'square' },
-      { description: 'สี่เหลี่ยมสีน้ำเงินอมม่วง', color: COLORS[4], shape: 'square' },
-      { description: 'สี่เหลี่ยมสีม่วงชมพู', color: COLORS[5], shape: 'square' },
+      { description: 'สี่เหลี่ยมสีแดง', color: COLORS[0], shape: 'square' as const },
+      { description: 'สี่เหลี่ยมสีเขียวมะกอก', color: COLORS[1], shape: 'square' as const},
+      { description: 'สี่เหลี่ยมสีเขียว', color: COLORS[2], shape: 'square' as const },
+      { description: 'สี่เหลี่ยมสีฟ้า', color: COLORS[3], shape: 'square' as const },
+      { description: 'สี่เหลี่ยมสีน้ำเงินอมม่วง', color: COLORS[4], shape: 'square' as const },
+      { description: 'สี่เหลี่ยมสีม่วงชมพู', color: COLORS[5], shape: 'square' as const },
     ],
     [
-      { description: 'วงกลมสีแดง', color: COLORS[0], shape: 'circle' },
-      { description: 'วงกลมสีเขียวมะกอก', color: COLORS[1], shape: 'circle' },
-      { description: 'วงกลมสีเขียว', color: COLORS[2], shape: 'circle' },
-      { description: 'วงกลมสีฟ้า', color: COLORS[3], shape: 'circle' },
-      { description: 'วงกลมสีน้ำเงินอมม่วง', color: COLORS[4], shape: 'circle' },
-      { description: 'วงกลมสีม่วงชมพู', color: COLORS[5], shape: 'circle' },
+      { description: 'วงกลมสีแดง', color: COLORS[0], shape: 'circle' as const },
+      { description: 'วงกลมสีเขียวมะกอก', color: COLORS[1], shape: 'circle' as const },
+      { description: 'วงกลมสีเขียว', color: COLORS[2], shape: 'circle' as const },
+      { description: 'วงกลมสีฟ้า', color: COLORS[3], shape: 'circle' as const },
+      { description: 'วงกลมสีน้ำเงินอมม่วง', color: COLORS[4], shape: 'circle' as const },
+      { description: 'วงกลมสีม่วงชมพู', color: COLORS[5], shape: 'circle' as const },
     ],
   ]), []);
 

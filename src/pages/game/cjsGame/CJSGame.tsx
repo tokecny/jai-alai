@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './CJSGame.css';
+// import './CJSGame.css';
 import CJSWindow from '../../../components/gameWindow/cjsWindow/CJSWindow';
 import useSound from 'use-sound';
 import clickSoundSrc from '../../../assets/sound/click.mp3';

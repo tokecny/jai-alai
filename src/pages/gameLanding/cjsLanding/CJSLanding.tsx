@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import './CJSLanding.css'
+// import './CJSLanding.css'
 import BreadCrumb from '../../../components/breadcrumbs/breadCrumb'
 import CJSWindow from '../../../components/gameWindow/cjsWindow/CJSWindow'
 import EnterButtons from '../../.././components/enterButtons/EnterButtons'
@@ -39,26 +39,43 @@ function makeHomeItems() {
     vismem.makeRectangle('s', centerX + 150 , centerY, 36, 36, false, colors[1], colors[1])
 }
 
-function makeBackground(bgcolor) {
-    vismem.makeRectangle('bg', centerX, centerY, canvasWidth, canvasHeight, false, bgcolor, bgcolor);
+function makeBackground(color: string) {
+  vismem.makeRectangle(
+    'bg',
+    centerX,
+    centerY,
+    canvasWidth,
+    canvasHeight,
+    false,
+    color,
+    color
+  );
 }
 
   return (
-    <div className='h-screen w-full bg-slate-50'>
-        <div className='row'>
-              {<BreadCrumb />}
-            <div id='w-full px-6 sm:px-12 py-6 sm:py-12'>
-              <div className="CJSLandingProgressBar"></div>
-              <div className="CJSLandingWindow">
-                {<CJSWindow />}
-              </div>
-              <div className="CJSLandingEnterButton">
-                {<EnterButtons />}
-              </div>
-            </div>
+    <div className="h-screen w-full bg-slate-50">
+      <div className="row">
+        <BreadCrumb />
+
+        <div className="w-full px-6 sm:px-12 py-6 sm:py-12">
+          <div className="CJSLandingProgressBar" />
+
+          <div className="CJSLandingWindow">
+            <CJSWindow
+              canvasWidth={canvasWidth}
+              canvasHeight={canvasHeight}
+              searchTarget={undefined}
+              searchTargetList={[]}
+            />
+          </div>
+
+          <div className="CJSLandingEnterButton">
+            <EnterButtons />
+          </div>
         </div>
+      </div>
     </div>
-  )
+  );
 }
 
 export default CJSLanding
