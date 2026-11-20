@@ -7,8 +7,9 @@ import CalibLite from './components/calibrate/CalibLite';
 import Instructions from './pages/gameInstruction/Instructions';
 import { getDataFromLocalStorage } from './uitls/offline';
 import FAST_3R_10B from './pages/game/FAST_3R_10B';
-import FAST_2R_21B_CC from './pages/game/FAST_2R_21B_CC';
-import FAST_2R_15B_TC from './pages/game/FAST_2R_15B_TC';
+import FAST_E2_EB from './pages/game/FAST_E2_EB';
+import FAST_E1_TR from './pages/game/FAST_E1_TR';
+import FAST_Practice from './pages/game/FAST_Practice';
 import ProtectedRoute from './components/protectionRoute';
 
 
@@ -94,18 +95,55 @@ function App() {
     />
 
     <Route
-      path="/search-in-the-crowd-cc"
+      path="/practice-tr"
       element={
         <ProtectedRoute>
-          <FAST_2R_21B_CC userId={(userId ?? 0)} />
+          <FAST_Practice
+            experimentId="E1"
+            nextPath="/search-in-the-crowd-tr"
+          />
         </ProtectedRoute>
       }
     />
+    
     <Route
-      path="/search-in-the-crowd-tc"
+      path="/practice-eb"
       element={
         <ProtectedRoute>
-          <FAST_2R_15B_TC userId={(userId ?? 0)} />
+          <FAST_Practice
+            experimentId="E2"
+            nextPath="/search-in-the-crowd-eb"
+          />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/search-in-the-crowd-tr"
+      element={
+        <ProtectedRoute>
+          {userId !== null && Number.isInteger(userId) && userId > 0 ? (
+            <FAST_E1_TR userId={userId} />
+          ) : (
+            <div className="p-8 text-center">
+              ไม่พบ Participant ID ที่ถูกต้อง กรุณากลับไปกรอกข้อมูลผู้เข้าร่วม
+            </div>
+          )}
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/search-in-the-crowd-eb"
+      element={
+        <ProtectedRoute>
+          {userId !== null && Number.isInteger(userId) && userId > 0 ? (
+            <FAST_E2_EB userId={userId} />
+          ) : (
+            <div className="p-8 text-center">
+              ไม่พบ Participant ID ที่ถูกต้อง กรุณากลับไปกรอกข้อมูลผู้เข้าร่วม
+            </div>
+          )}
         </ProtectedRoute>
       }
     />
