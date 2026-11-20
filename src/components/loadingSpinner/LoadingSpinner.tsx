@@ -15,7 +15,7 @@ function LoadingSpinner() {
         {isLoading ? (
             <div className="loading-panel fixed inset-0 z-50 bg-[rgba(73,73,73,0.4)] flex items-center justify-center">
                 <div 
-                    className="loader rounded-full bg-gradient-to-r from-pink-400 to-amber-400 animate-spin"
+                    className="loader rounded-full bg-gradient-to-r from-pink-500 to-pink-500/20 animate-spin"
                     style={{
                         position: 'fixed',
                         right: '1.5vw',  // ระยะห่างจากขอบขวา

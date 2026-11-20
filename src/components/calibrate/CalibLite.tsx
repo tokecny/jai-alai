@@ -28,7 +28,7 @@ export default function CalibLite() {
       <div className="bg-white/85 rounded-2xl shadow p-6 sm:p-8 max-w-xl w-[92vw] space-y-6">
         <h1 className="text-lg sm:text-xl font-semibold text-gray-900">ปรับความสว่างหน้าจอก่อนเริ่ม</h1>
         <p className="text-sm text-gray-700">
-          เริ่มจากปรับความสว่างของหน้าจอไว้ที่ 50% <br></br>แล้วดูว่าสองกล่องสีมีความต่างกันหรือไม่ จากนั้นกด “เข้าสู่การทดสอบ”
+          เริ่มจากปรับความสว่างของหน้าจอไว้ที่ <b>50%</b> <br></br>แล้วดูว่าสีของทั้งสองกล่องมีความต่างกันหรือไม่ จากนั้นกด “เข้าสู่การทดสอบ”
         </p>
 
         {/* โทนมืด: พื้นหลัง vs มืดจางบนพื้นหลังเดียวกัน */}
@@ -56,7 +56,7 @@ export default function CalibLite() {
         </section>
 
         <div className="flex items-center justify-between">
-          <div className="text-xs text-gray-600">ให้ลดแสงลงเล็กน้อยหากเห็นว่าสองกล่องสีเดียวกัน</div>
+          <div className="text-xs text-gray-600">*ให้ลดแสงลงเล็กน้อยหากเห็นว่าสองกล่องสีเดียวกัน</div>
           <button
             onClick={save}
             disabled={!okDark}

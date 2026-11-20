@@ -25,7 +25,7 @@ export default function GameSelectionCards(props: {games: IGameInfo[]}) {
               <dd className="text-sm text-gray-600">{game.title}</dd>
               <dt className="sr-only">Role</dt>
               <dd className="mt-3">
-                <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-500 ring-1 ring-inset ring-amber-500/20">
+                <span className="inline-flex items-center rounded-full bg-pink-50 px-2 py-1 text-xs font-bold text-pink-500 ring-1 ring-inset ring-pink-500/20">
                   {game.domain}
                 </span>
               </dd>
